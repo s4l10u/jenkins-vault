@@ -1,14 +1,25 @@
+def secrets = [
+  [path: 'secret/github', engineVersion: 2, secretValues: [
+    [envVar: 'DB_NAME', vaultKey: 'name'],
+    [envVar: 'URL', vaultKey: 'url'],
+    [envVar: 'USERNAME', vaultKey: 'username'],
+    [envVar: 'PASSWORD', vaultKey: 'password']]],
+]
+def configuration = [vaultUrl: 'https://vault.eva.sn',  vaultCredentialId: 'vault-approle', engineVersion: 2]
+                      
 pipeline {
     agent any
-    environment {
-        SECRET = vault path: 'secret/github', key: 'username', vaultUrl: 'https://vault.eva.sn', credentialsId: 'vault-approle', engineVersion: "2"
-    }
-    stages {
-        stage("read vault key") {
-            steps {
-                echo "${SECRET}"
-            }
-        }
+    stages{   
+      stage('Vault') {
+        steps {
+          withVault([configuration: configuration, vaultSecrets: secrets]) {
+            sh "echo ${env.DB_NAME}"
+            sh "echo ${env.URL}"
+            sh "echo ${env.USERNAME}"
+            sh "echo ${env.PASSWORD}"
+          }
+        }  
+      }
     }
 }
 
